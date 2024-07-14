@@ -2,8 +2,13 @@
 // 	throw new Error("Trying to access index out of bound");
 // }
 
-function HashMap() {
-	const buckets = new Array(16);
+function createHashMap() {
+	const INITIAL_BUCKETS = 16;
+	const LOAD_FACTOR_THRESHOLD = 0.75;
+
+	let buckets = new Array(INITIAL_BUCKETS);
+	let size = 0;
+
 	function hash(key) {
 		let hashCode = 0;
 
@@ -14,21 +19,45 @@ function HashMap() {
 
 		return hashCode;
 	}
-
+	function resizeBuckets(newSize) {
+		const newBuckets = new Array(newSize);
+		for (let i = 0; i < buckets.length; i++) {
+			if (buckets[i]) {
+				const bucket = buckets[i];
+				const newBucketIndex = bucket.key % newSize;
+				newBuckets[newBucketIndex] = bucket;
+			}
+		}
+		buckets = newBuckets;
+	}
 	function set(key, value) {
 		let hashCode = hash(key);
 		let bucket = hashCode % buckets.length;
+		if (bucket < 0 || bucket >= buckets.length) {
+			throw new Error("Trying to access index out of bound");
+		}
 		if (get(key)) {
 			buckets[bucket].key = hashCode;
 			buckets[bucket].value = value;
 		} else {
 			buckets[bucket] = hashNode(hashCode, value);
 		}
+		size = buckets.filter((index) => index !== null).length;
+		const loadFactor = size / buckets.length;
+		if (loadFactor > LOAD_FACTOR_THRESHOLD) {
+			resizeBuckets(buckets.length * 2);
+		}
 	}
 	function get(key) {
 		// takes one argument as a key and returns the value that is assigned to this key. If a key is not found, return null.
 		let hashCode = hash(key);
 		let bucket = hashCode % buckets.length;
+		if (bucket < 0 || bucket >= buckets.length) {
+			throw new Error("Trying to access index out of bound");
+		}
+		if (bucket < 0 || bucket >= buckets.length) {
+			throw new Error("Trying to access index out of bound");
+		}
 		if (buckets[bucket]) {
 			if (buckets[bucket].key == hashCode) {
 				return buckets[bucket].value;
@@ -48,8 +77,19 @@ function HashMap() {
 		// If the key isn’t in the hash map, it should return false.
 		let hashCode = hash(key);
 		let bucket = hashCode % buckets.length;
+		if (bucket < 0 || bucket >= buckets.length) {
+			throw new Error("Trying to access index out of bound");
+		}
 		if (get(key)) {
 			buckets[bucket] == null;
+			size = buckets.filter((index) => index !== null).length;
+			const loadFactor = size / buckets.length;
+			if (
+				loadFactor < LOAD_FACTOR_THRESHOLD / 2 &&
+				buckets.length > INITIAL_BUCKETS
+			) {
+				resizeBuckets(Math.max(buckets.length / 2, INITIAL_BUCKETS));
+			}
 			return true;
 		}
 		return false;
@@ -104,12 +144,12 @@ function hashNode(key, value) {
 		value,
 	};
 }
-const hasah = HashMap();
-let newHash = hasah.hash("Boobs");
-let bucketNum = newHash % hasah.getBuckets().length;
+const hashMap = createHashMap();
+let newHash = hashMap.hash("Boobs");
+let bucketNum = newHash % hashMap.getBuckets().length;
 console.log({ newHash, bucketNum });
 
-const test = HashMap();
+const test = createHashMap();
 
 test.set("apple", "red");
 test.set("banana", "yellow");
